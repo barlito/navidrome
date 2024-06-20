@@ -1,0 +1,56 @@
+version: "3"
+services:
+  navidrome:
+    image: deluan/navidrome:latest
+    user: 1000:1000
+    environment:
+      ND_SCANSCHEDULE: 1h
+      ND_LOGLEVEL: info
+      ND_SESSIONTIMEOUT: 72h
+      ND_BASEURL: ""
+      ND_ENABLESHARING: "true"
+      ND_DEFAULTLANGUAGE: "fr"
+      ND_DEFAULTTHEME: "Spotify-ish"
+    deploy:
+      labels:
+        - traefik.enable=true
+
+        - traefik.http.services.navidrome.loadbalancer.server.port=4533
+
+        - traefik.http.routers.navidrome.rule=Host(`navidrome.barlito.fr`)
+        - traefik.http.routers.navidrome.entrypoints=http
+        - traefik.http.routers.navidrome.middlewares=tls-redirectscheme
+
+        - traefik.http.routers.navidrome-secure.rule=Host(`navidrome.barlito.fr`)
+        - traefik.http.routers.navidrome-secure.entrypoints=https
+        - traefik.http.routers.navidrome-secure.tls=true
+        - traefik.http.routers.navidrome-secure.tls.certresolver=letsencrypt
+    volumes:
+      - "./data:/data"
+      - "./music:/music:ro"
+
+  feishin:
+    image: ghcr.io/jeffvli/feishin:latest
+    environment:
+      SERVER_NAME: YoulZ
+      SERVER_TYPE: navidrome
+      SERVER_URL: "https://navidrome.barlito.fr/"
+      SERVER_LOCK: "true"
+    deploy:
+      labels:
+        - traefik.enable=true
+
+        - traefik.http.services.feishin.loadbalancer.server.port=9180
+
+        - traefik.http.routers.feishin.rule=Host(`music.barlito.fr`)
+        - traefik.http.routers.feishin.entrypoints=http
+        - traefik.http.routers.feishin.middlewares=tls-redirectscheme
+
+        - traefik.http.routers.feishin-secure.rule=Host(`music.barlito.fr`)
+        - traefik.http.routers.feishin-secure.entrypoints=https
+        - traefik.http.routers.feishin-secure.tls=true
+        - traefik.http.routers.feishin-secure.tls.certresolver=letsencrypt
+
+networks:
+  traefik_traefik_proxy:
+    external: true

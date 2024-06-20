@@ -1,0 +1,8 @@
+###> IDE ###
+.idea
+###< IDE ###
+
+/data/*
+!/data/.gitkeep
+/music/*
+!/music/.gitkeep
